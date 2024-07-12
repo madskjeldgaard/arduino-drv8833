@@ -1,0 +1,25 @@
+{
+  "name": "DRV8833",
+  "version": "0.1.0",
+  "description": "Control motors using the DRV8833 motor driver in Arduino.",
+  "keywords": "motor, driver, DRV8833, Arduino, control",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/madskjeldgaard/arduino-drv8833.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Mads Kjeldgaard",
+      "email": "madskjeldgaardnielsen@gmail.com",
+      "url": "https://www.madskjeldgaard.dk/",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+  },
+  "frameworks": ["arduino"],
+  "platforms": "*"
+}

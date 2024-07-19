@@ -115,7 +115,8 @@ public:
   /*
    * @brief Set the speed of the motor. This defaults to forward direction
    *
-   * @param speed The speed of the motor.  The speed is a number between -1.0 and 1.0.
+   * @param speed The speed of the motor.  The speed is a number between -1.0
+   * and 1.0.
    *
    */
   void setSpeed(float speed) {
@@ -124,11 +125,11 @@ public:
     setSpeed(speed, direction);
   }
 
-
   /*
    * @brief Set the speed and direction of the motor bipolar mode
-   * @param speed The speed of the motor.  The speed is a number between -1.0 and 1.0.
-   * Positive values are forward, negative values are backward, and 0 is stopped.
+   * @param speed The speed of the motor.  The speed is a number between -1.0
+   * and 1.0. Positive values are forward, negative values are backward, and 0
+   * is stopped.
    *
    */
   void setSpeedBipolar(float speed) {
@@ -205,9 +206,9 @@ public:
    */
   void setSpeedBipolar(int16_t speed) {
     if (speed > 0) {
-      setSpeed(speed, Direction::Forward);
+      setSpeed(static_cast<uint16_t>(speed), Direction::Forward);
     } else if (speed < 0) {
-      setSpeed(speed, Direction::Backward);
+      setSpeed(static_cast<uint16_t>(speed), Direction::Backward);
     } else {
       stop();
     }

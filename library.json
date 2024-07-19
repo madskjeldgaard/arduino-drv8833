@@ -1,5 +1,5 @@
 {
-  "name": "DRV8833",
+  "name": "ArduinoDRV8833",
   "version": "0.1.0",
   "description": "Control motors using the DRV8833 motor driver in Arduino.",
   "keywords": "motor, driver, DRV8833, Arduino, control",

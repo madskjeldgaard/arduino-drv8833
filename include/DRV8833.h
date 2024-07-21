@@ -100,14 +100,7 @@ public:
   void setDecayMode(DecayMode mode) { mDecayMode = mode; }
 
   void setSpeed(float speed, Direction dir) {
-
-    if (speed > 1.0) {
-      speed = 1.0;
-    } else if (speed < -1.0) {
-      speed = -1.0;
-    }
-
-    const auto pwm_val = static_cast<uint16_t>(speed * MAX_PWM_VAL);
+    const auto pwm_val = static_cast<int>(speed * MAX_PWM_VAL);
 
     setSpeed(pwm_val, dir);
   }
@@ -133,9 +126,12 @@ public:
    *
    */
   void setSpeedBipolar(float speed) {
-    if (speed > 0) {
+    Serial.println("SPEED IS: ");
+    Serial.println(speed);
+
+    if (speed > 0.f) {
       setSpeed(speed, Direction::Forward);
-    } else if (speed < 0) {
+    } else if (speed < 0.f) {
       setSpeed(speed, Direction::Backward);
     } else {
       stop();
@@ -149,7 +145,7 @@ public:
    * @param speed The speed of the motor. The speed is a number between 0 and
    * MAX_PWM_VAL (probably 255)
    */
-  void setSpeed(uint16_t speed) { setSpeed(speed, Direction::Forward); }
+  void setSpeed(int speed) { setSpeed(speed, Direction::Forward); }
 
   /**
    * @brief Set speed and direction of the motor
@@ -157,12 +153,9 @@ public:
    * @param speed The speed of the motor.
    * @param dir The direction of the motor.  Forward or Backwards.
    */
-  void setSpeed(uint16_t motorSpeed, Direction dir) {
+  void setSpeed(int motorSpeed, Direction dir) {
 
-    // FIXME: Is this a bug?
-    // For some reason, the value is inverted when the decay mode is slow
-    auto speed =
-        mDecayMode == DecayMode::Slow ? MAX_PWM_VAL - motorSpeed : motorSpeed;
+    auto speed = motorSpeed;
 
     switch (mDecayMode) {
     case DecayMode::Fast:
@@ -204,11 +197,11 @@ public:
    * values are forward, negative values are backward, and 0 is stopped.
    *
    */
-  void setSpeedBipolar(int16_t speed) {
+  void setSpeedBipolar(int speed) {
     if (speed > 0) {
-      setSpeed(static_cast<uint16_t>(speed), Direction::Forward);
+      setSpeed(static_cast<int>(speed), Direction::Forward);
     } else if (speed < 0) {
-      setSpeed(static_cast<uint16_t>(speed), Direction::Backward);
+      setSpeed(static_cast<int>(speed), Direction::Backward);
     } else {
       stop();
     }

@@ -1,13 +1,14 @@
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/madskjeldgaard/library/ArduinoDRV8833.svg)](https://registry.platformio.org/libraries/madskjeldgaard/ArduinoDRV8833)
+
 # DRV8833 Arduino Library
 
 This library provides an interface for controlling the DRV8833 dual H-bridge motor driver chip using the Arduino framework. The DRV8833 can drive two DC motors or one stepper motor. Albeit this currently is mostly written with DC motors in mind.
 
-The library is set up as a platformio library.
+Works well with something like [this Adafruit board](https://www.adafruit.com/product/3297) but should also just work with any DRV8833 setup. 
 
 ## Features
 
-- Platformio library
-- Control two DC motors or one stepper motor.
+- [Platformio library](https://registry.platformio.org/libraries/madskjeldgaard/ArduinoDRV8833)
 - Set the speed and direction of each motor either using integers or floats.
 - Set the decay mode of each H-bridge (fast or slow) to improve performance of brushed DC motors.
 - Put the DRV8833 to sleep to save power.
@@ -31,10 +32,10 @@ Control a motor:
 
 ```cpp
 // 25% speed, forward
-motorDriver.getBridgeA().setSpeed(0.25, motor::Direction::Forward);
+motorDriver.getBridgeA().setSpeed(0.25f, motor::Direction::Forward);
 
 // 13% speed, backwards
-motorDriver.getBridgeA().setSpeed(0.13, motor::Direction::Backward);
+motorDriver.getBridgeA().setSpeed(0.13f, motor::Direction::Backward);
 
 ```
 

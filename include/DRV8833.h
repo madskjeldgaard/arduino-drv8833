@@ -210,6 +210,12 @@ public:
 
     auto speed = motorSpeed;
 
+    // If decaymode is Slow, the speed is reversed
+    if (mDecayMode == DecayMode::Slow) {
+      const auto max_pwm = (mPCA9685Chip == nullptr) ? MAX_PWM_VAL : 4095;
+      speed = map(speed, 0, max_pwm, max_pwm, 0);
+    }
+
     switch (mDecayMode) {
     case DecayMode::Fast:
 

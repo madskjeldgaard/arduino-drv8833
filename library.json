@@ -1,6 +1,6 @@
 {
   "name": "ArduinoDRV8833",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Control motors using the DRV8833 motor driver in Arduino.",
   "keywords": "motor, driver, DRV8833, Arduino, control",
   "repository":
@@ -19,6 +19,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "robtillaart/PCA9685": "0.7.1"
   },
   "frameworks": ["arduino"],
   "platforms": "*"

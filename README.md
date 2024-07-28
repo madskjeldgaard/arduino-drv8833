@@ -2,7 +2,9 @@
 
 # DRV8833 Arduino Library
 
-This library provides an interface for controlling the DRV8833 dual H-bridge motor driver chip using the Arduino framework. The DRV8833 can drive two DC motors or one stepper motor. Albeit this currently is mostly written with DC motors in mind.
+This library provides an interface for controlling the DRV8833 dual H-bridge motor driver chip using the Arduino framework. Each DRV8833 chip can drive two DC motors or one stepper motor. Albeit this currently is mostly written with DC motors in mind.
+
+This library additionally supports using the motor driver in a popular setup where it is connected to a [PCA9685](https://github.com/RobTillaart/PCA9685_RT) i2c chip to allow controlling it via i2c.
 
 Works well with something like [this Adafruit board](https://www.adafruit.com/product/3297) but should also just work with any DRV8833 setup. 
 
@@ -12,6 +14,7 @@ Works well with something like [this Adafruit board](https://www.adafruit.com/pr
 - Set the speed and direction of each motor either using integers or floats.
 - Set the decay mode of each H-bridge (fast or slow) to improve performance of brushed DC motors.
 - Put the DRV8833 to sleep to save power.
+- Supports chips connected via i2c (PCA9685)
 - Wake the DRV8833 from sleep.
 
 ## Usage
@@ -81,6 +84,8 @@ lib_deps =
 ### Arduino
 
 Download the library and add it to your Arduino libraries folder.
+
+You also need to manually download and install the [PCA9685_RT](https://github.com/RobTillaart/PCA9685_RT) library.
 
 ## Contributing
 

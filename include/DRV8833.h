@@ -11,6 +11,8 @@
 
 #pragma once
 #include <Arduino.h>
+#include <PCA9685.h>
+#include <memory>
 
 namespace motor {
 
@@ -72,9 +74,8 @@ public:
    * @param in1 pin1 of the motor driver bridge
    * @param in2 pin2 of the motor driver bridge
    */
-  DRV8833_HBridge(uint8_t in1, uint8_t in2) : mIn1(in1), mIn2(in2) {
-    pinMode(in1, OUTPUT);
-    pinMode(in2, OUTPUT);
+  DRV8833_HBridge(uint8_t in1, uint8_t in2)
+      : mIn1(in1), mIn2(in2), mPCA9685Chip(nullptr) {
     mDecayMode = DecayMode::Slow;
   }
 
@@ -87,9 +88,49 @@ public:
    * @param mode Decaymode of the motor driver bridge
    */
   DRV8833_HBridge(uint8_t in1, uint8_t in2, DecayMode mode)
-      : mIn1(in1), mIn2(in2), mDecayMode(mode) {
-    pinMode(in1, OUTPUT);
-    pinMode(in2, OUTPUT);
+      : mIn1(in1), mIn2(in2), mDecayMode(mode), mPCA9685Chip(nullptr) {}
+
+  /**
+   * @brief Construct a bridge connected to a PCA9685 i2c PWM chip.
+   *
+   * @param pca9685Chip pointer to the chip
+   * @param in1 What channel on the PCA9685 chip is connected to this bridge's
+   * pin 1
+   * @param in2 What channel on the PCA9685 chip is connected to this bridge's
+   * pin 2
+   */
+  DRV8833_HBridge(std::shared_ptr<PCA9685> pca9685Chip, uint8_t pcaChannel1,
+                  uint8_t pcaChannel2)
+      : mIn1(pcaChannel1), mIn2(pcaChannel2), mPCA9685Chip(pca9685Chip) {
+    mDecayMode = DecayMode::Slow;
+  }
+
+  /*
+   * @brief Construct a bridge connected to a PCA9685 i2c PWM chip.
+   * @param pca9685Chip pointer to the chip
+   *
+   * @param in1 What channel on the PCA9685 chip is connected to this bridge's
+   * pin 1
+   * @param in2 What channel on the PCA9685 chip is connected to this bridge's
+   * pin 2
+   * @param mode The decay mode of the motor driver bridge.
+   *
+   */
+  DRV8833_HBridge(std::shared_ptr<PCA9685> pca9685Chip, uint8_t pcaChannel1,
+                  uint8_t pcaChannel2, DecayMode mode)
+      : mIn1(pcaChannel1), mIn2(pcaChannel2), mPCA9685Chip(pca9685Chip),
+        mDecayMode(mode) {}
+
+  void begin() {
+
+    if (mPCA9685Chip == nullptr) {
+      // Initialize the pins if not using PCA9685
+      pinMode(mIn1, OUTPUT);
+      pinMode(mIn2, OUTPUT);
+    }
+
+    // If using PCA9685, the channels are assumed to be set up already
+    stop();
   }
 
   /**
@@ -100,7 +141,12 @@ public:
   void setDecayMode(DecayMode mode) { mDecayMode = mode; }
 
   void setSpeed(float speed, Direction dir) {
-    const auto pwm_val = static_cast<int>(speed * MAX_PWM_VAL);
+
+    constexpr auto twelve_bit_pwm = 4095;
+    const auto max_pwm =
+        (mPCA9685Chip == nullptr) ? MAX_PWM_VAL : twelve_bit_pwm;
+
+    const auto pwm_val = static_cast<int>(speed * max_pwm);
 
     setSpeed(pwm_val, dir);
   }
@@ -113,6 +159,10 @@ public:
    *
    */
   void setSpeed(float speed) {
+    Serial.println("FLOAT SPEED IS: ");
+    Serial.println(speed);
+
+
     auto direction = Direction::Forward;
 
     setSpeed(speed, direction);
@@ -132,7 +182,7 @@ public:
     if (speed > 0.f) {
       setSpeed(speed, Direction::Forward);
     } else if (speed < 0.f) {
-      setSpeed(speed, Direction::Backward);
+      setSpeed(std::abs(speed), Direction::Backward);
     } else {
       stop();
     }
@@ -155,6 +205,9 @@ public:
    */
   void setSpeed(int motorSpeed, Direction dir) {
 
+    Serial.println("INT SPEED IS: ");
+    Serial.println(motorSpeed);
+
     auto speed = motorSpeed;
 
     switch (mDecayMode) {
@@ -162,12 +215,12 @@ public:
 
       switch (dir) {
       case Direction::Forward:
-        analogWrite(mIn1, speed);
-        digitalWrite(mIn2, 0);
+        writeToPin1(speed);
+        digitalWriteToPin2(0);
         break;
       case Direction::Backward:
-        digitalWrite(mIn1, 0);
-        analogWrite(mIn2, speed);
+        digitalWriteToPin1(0);
+        writeToPin2(speed);
         break;
       }
       break;
@@ -176,12 +229,12 @@ public:
       switch (dir) {
       case Direction::Forward:
 
-        digitalWrite(mIn1, HIGH);
-        analogWrite(mIn2, speed);
+        digitalWriteToPin1(HIGH);
+        writeToPin2(speed);
         break;
       case Direction::Backward:
-        analogWrite(mIn1, speed);
-        digitalWrite(mIn2, HIGH);
+        writeToPin1(speed);
+        digitalWriteToPin2(HIGH);
         break;
       }
 
@@ -201,19 +254,62 @@ public:
     if (speed > 0) {
       setSpeed(static_cast<int>(speed), Direction::Forward);
     } else if (speed < 0) {
-      setSpeed(static_cast<int>(speed), Direction::Backward);
+      setSpeed(std::abs(static_cast<int>(speed)), Direction::Backward);
     } else {
       stop();
     }
   }
 
   void stop() {
-    digitalWrite(mIn1, LOW);
-    digitalWrite(mIn2, LOW);
+    digitalWriteToPin1(LOW);
+    digitalWriteToPin2(LOW);
   }
 
 private:
+  void writeToPin1(int value) {
+
+    if (mPCA9685Chip == nullptr) {
+      analogWrite(mIn1, value);
+    } else {
+      const auto channel = mIn1;
+
+      // single PWM setting, channel = 0..15, offTime = 0..4095  (onTime = 0)
+      mPCA9685Chip->setPWM(channel, value);
+    }
+  }
+
+  void writeToPin2(int value) {
+
+    if (mPCA9685Chip == nullptr) {
+      analogWrite(mIn2, value);
+    } else {
+      const auto channel = mIn2;
+      // single PWM setting, channel = 0..15, offTime = 0..4095  (onTime = 0)
+      mPCA9685Chip->setPWM(channel, value);
+    }
+  }
+
+  void digitalWriteToPin1(int value) {
+    if (mPCA9685Chip == nullptr) {
+      digitalWrite(mIn1, value);
+    } else {
+      const auto channel = mIn1;
+      mPCA9685Chip->write1(channel, value);
+    }
+  }
+
+  void digitalWriteToPin2(int value) {
+    if (mPCA9685Chip == nullptr) {
+      digitalWrite(mIn2, value);
+    } else {
+      const auto channel = mIn2;
+      mPCA9685Chip->write1(channel, value);
+    }
+  }
+
   uint8_t mIn1, mIn2;
+
+  std::shared_ptr<PCA9685> mPCA9685Chip;
 
   DecayMode mDecayMode;
 };
@@ -247,10 +343,7 @@ public:
    * @param sleep Pin connected to SLEEP on the DRV8833
    */
   DRV8833(uint8_t in1, uint8_t in2, uint8_t in3, uint8_t in4, uint8_t sleep)
-      : mBridgeA(in1, in2), mBridgeB(in3, in4), mSleep(sleep) {
-    pinMode(sleep, OUTPUT);
-    digitalWrite(sleep, HIGH);
-  }
+      : mBridgeA(in1, in2), mBridgeB(in3, in4), mSleep(sleep) {}
 
   /**
    * @brief Constructor for the DRV8833 class. The decay mode can be specified.
@@ -264,9 +357,45 @@ public:
    */
   DRV8833(uint8_t in1, uint8_t in2, uint8_t in3, uint8_t in4, uint8_t sleep,
           DecayMode mode)
-      : mBridgeA(in1, in2, mode), mBridgeB(in3, in4, mode), mSleep(sleep) {
-    pinMode(sleep, OUTPUT);
-    digitalWrite(sleep, HIGH);
+      : mBridgeA(in1, in2, mode), mBridgeB(in3, in4, mode), mSleep(sleep) {}
+
+  /**
+   * @brief Constructor for the DRV8833 class. The decay mode can be specified.
+   *
+   * @param pca9685Chip pointer to the PCA9685 chip
+   * @param in1 Channel on the PCA9685 chip connected to AIN1 on the DRV8833
+   * @param in2 Channel on the PCA9685 chip connected to AIN2 on the DRV8833
+   * @param in3 Channel on the PCA9685 chip connected to BIN1 on the DRV8833
+   * @param in4 Channel on the PCA9685 chip connected to BIN2 on the DRV8833
+   * @param sleep Pin connected to SLEEP on the DRV8833
+   */
+  DRV8833(std::shared_ptr<PCA9685> pca9685Chip, uint8_t in1, uint8_t in2,
+          uint8_t in3, uint8_t in4, uint8_t sleep)
+      : mBridgeA(pca9685Chip, in1, in2), mBridgeB(pca9685Chip, in3, in4),
+        mSleep(sleep) {}
+
+  /**
+   * @brief Constructor for the DRV8833 class. The decay mode can be specified.
+   *
+   * @param pca9685Chip pointer to the PCA9685 chip
+   * @param in1 Channel on the PCA9685 chip connected to AIN1 on the DRV8833
+   * @param in2 Channel on the PCA9685 chip connected to AIN2 on the DRV8833
+   * @param in3 Channel on the PCA9685 chip connected to BIN1 on the DRV8833
+   * @param in4 Channel on the PCA9685 chip connected to BIN2 on the DRV8833
+   * @param sleep Pin connected to SLEEP on the DRV8833
+   * @param mode Decay mode of the motor driver chip
+   */
+  DRV8833(std::shared_ptr<PCA9685> pca9685Chip, uint8_t in1, uint8_t in2,
+          uint8_t in3, uint8_t in4, uint8_t sleep, DecayMode mode)
+      : mBridgeA(pca9685Chip, in1, in2, mode),
+        mBridgeB(pca9685Chip, in3, in4, mode), mSleep(sleep) {}
+
+  void begin() {
+    mBridgeA.begin();
+    mBridgeB.begin();
+
+    pinMode(mSleep, OUTPUT);
+    wake();
   }
 
   /**

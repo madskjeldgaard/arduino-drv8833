@@ -14,7 +14,7 @@ Works well with something like [this Adafruit board](https://www.adafruit.com/pr
 - Set the speed and direction of each motor either using integers or floats.
 - Set the decay mode of each H-bridge (fast or slow) to improve performance of brushed DC motors.
 - Put the DRV8833 to sleep to save power.
-- Supports chips connected via i2c (PCA9685)
+- Supports chips connected via i2c (using the PCA9685 chip, like in [this board for example](https://kitronik.co.uk/products/5329-kitronik-compact-robotics-board-for-raspberry-pi-pico))
 - Wake the DRV8833 from sleep.
 
 ## Usage

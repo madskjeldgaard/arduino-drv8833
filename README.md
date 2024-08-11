@@ -41,6 +41,8 @@ Control a motor:
 // 25% speed, forward
 motorDriver.getBridgeA().setSpeed(0.25f, motor::Direction::Forward);
 
+motorDriver.getBridgeA().start();
+
 // 13% speed, backwards
 motorDriver.getBridgeA().setSpeed(0.13f, motor::Direction::Backward);
 

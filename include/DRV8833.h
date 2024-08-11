@@ -204,39 +204,48 @@ public:
     // If decaymode is Slow, the speed is reversed
     if (mDecayMode == DecayMode::Slow) {
       const auto max_pwm = (mPCA9685Chip == nullptr) ? MAX_PWM_VAL : 4095;
-      speed = map(speed, 0, max_pwm, max_pwm, 0);
+      actual_speed = map(speed, 0, max_pwm, max_pwm, 0);
+    } else {
+      actual_speed = speed;
     }
+
+    current_direction = dir;
+  }
+
+  void start() {
 
     switch (mDecayMode) {
     case DecayMode::Fast:
 
-      switch (dir) {
+      switch (current_direction) {
       case Direction::Forward:
-        writeToPin1(speed);
+        writeToPin1(actual_speed);
         digitalWriteToPin2(0);
         break;
       case Direction::Backward:
         digitalWriteToPin1(0);
-        writeToPin2(speed);
+        writeToPin2(actual_speed);
         break;
       }
       break;
     case DecayMode::Slow:
 
-      switch (dir) {
+      switch (current_direction) {
       case Direction::Forward:
 
         digitalWriteToPin1(HIGH);
-        writeToPin2(speed);
+        writeToPin2(actual_speed);
         break;
       case Direction::Backward:
-        writeToPin1(speed);
+        writeToPin1(actual_speed);
         digitalWriteToPin2(HIGH);
         break;
       }
 
       break;
     }
+
+    isrunning = true;
   }
 
   /**
@@ -260,7 +269,11 @@ public:
   void stop() {
     digitalWriteToPin1(LOW);
     digitalWriteToPin2(LOW);
+    isrunning = false;
   }
+
+  auto isRunning() { return isrunning; }
+  auto isStopped() { return !isrunning; }
 
 private:
   void writeToPin1(int value) {
@@ -309,6 +322,12 @@ private:
   std::shared_ptr<PCA9685> mPCA9685Chip;
 
   DecayMode mDecayMode;
+
+  int actual_speed = 0;
+
+  Direction current_direction = Direction::Forward;
+
+  bool isrunning = false;
 };
 
 /**
@@ -401,6 +420,11 @@ public:
   void stopAll() {
     mBridgeA.stop();
     mBridgeB.stop();
+  }
+
+  void startAll() {
+    mBridgeA.start();
+    mBridgeB.start();
   }
 
   /**

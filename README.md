@@ -29,6 +29,10 @@ Create an instance of the `DRV8833` class:
 
 ```cpp
 motor::DRV8833 motorDriver(in1, in2, in3, in4, sleep);
+
+void setup() {
+    motorDriver.begin();
+}
 ```
 
 Control a motor:

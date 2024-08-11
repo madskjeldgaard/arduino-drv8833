@@ -159,9 +159,6 @@ public:
    *
    */
   void setSpeed(float speed) {
-    Serial.println("FLOAT SPEED IS: ");
-    Serial.println(speed);
-
 
     auto direction = Direction::Forward;
 
@@ -176,9 +173,6 @@ public:
    *
    */
   void setSpeedBipolar(float speed) {
-    Serial.println("SPEED IS: ");
-    Serial.println(speed);
-
     if (speed > 0.f) {
       setSpeed(speed, Direction::Forward);
     } else if (speed < 0.f) {
@@ -204,9 +198,6 @@ public:
    * @param dir The direction of the motor.  Forward or Backwards.
    */
   void setSpeed(int motorSpeed, Direction dir) {
-
-    Serial.println("INT SPEED IS: ");
-    Serial.println(motorSpeed);
 
     auto speed = motorSpeed;
 

@@ -12,8 +12,9 @@
 #include <Wire.h>
 #include <array>
 
-constexpr auto pwmFreq = 25; // Low frequency works well with smaller motors
-constexpr auto decayMode = motor::DecayMode::Fast;
+
+constexpr auto pwmFreq = 50000; // Low frequency works well with smaller motors, leads to audible pwm noise. Above nyqist (22khz ish) is silent.
+constexpr auto decayMode = motor::DecayMode::Slow;
 constexpr auto i2c_sda = 8;
 constexpr auto i2c_scl = 9;
 
@@ -52,6 +53,9 @@ void setup() {
   Serial.println(PCA9685_LIB_VERSION);
   Serial.println();
 
+  // Set PWM frequency
+  analogWriteFreq(pwmFreq);
+
   Wire.setSDA(i2c_sda);
   Wire.setSCL(i2c_scl);
   Wire.begin();
@@ -61,7 +65,12 @@ void setup() {
   motorArray->setFrequency(pwmFreq);
 
   for (auto &motor : motors) {
+    const auto speed = 0.75f;
     motor.begin();
+    motor.wake();
+    motor.getBridgeA().setSpeedBipolar(speed);
+    motor.getBridgeB().setSpeedBipolar(speed);
+    motor.startAll();
   }
 
   randomizeAllMotorSpeeds();

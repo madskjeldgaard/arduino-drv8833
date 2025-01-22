@@ -272,8 +272,8 @@ public:
     isrunning = false;
   }
 
-  auto isRunning() { return isrunning; }
-  auto isStopped() { return !isrunning; }
+  auto isRunning() const { return isrunning; }
+  auto isStopped() const { return !isrunning; }
 
 private:
   void writeToPin1(int value) {
@@ -406,7 +406,7 @@ public:
       : mBridgeA(pca9685Chip, in1, in2, mode),
         mBridgeB(pca9685Chip, in3, in4, mode), mSleep(sleep) {}
 
-  void begin() {
+  void setup() {
     mBridgeA.begin();
     mBridgeB.begin();
 
@@ -426,6 +426,10 @@ public:
     mBridgeA.start();
     mBridgeB.start();
   }
+
+  void startA() { mBridgeA.start(); }
+
+  void startB() { mBridgeB.start(); }
 
   /**
    * @brief Get the H-bridge object for the A side of the DRV8833
@@ -450,6 +454,34 @@ public:
    * @brief Wake the DRV8833 from sleep.
    */
   void wake() { digitalWrite(mSleep, HIGH); }
+
+  // Iterator support
+  class Iterator {
+  public:
+    Iterator(DRV8833 *controller, int index)
+        : controller(controller), index(index) {}
+
+    bool operator!=(const Iterator &other) const {
+      return index != other.index;
+    }
+
+    Iterator &operator++() {
+      ++index;
+      return *this;
+    }
+
+    DRV8833_HBridge &operator*() {
+      return (index == 0) ? controller->mBridgeA : controller->mBridgeB;
+    }
+
+  private:
+    DRV8833 *controller;
+    int index;
+  };
+
+  Iterator begin() { return Iterator(this, 0); }
+
+  Iterator end() { return Iterator(this, 2); }
 
 private:
   DRV8833_HBridge mBridgeA, mBridgeB;
